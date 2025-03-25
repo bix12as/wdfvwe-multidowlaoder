@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CODERX || Multi Downloader</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            text-align: center;
+            background-color: #1f1f1f;
+            border-radius: 12px;
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+            padding: 40px 30px;
+            max-width: 500px;
+            width: 100%;
+            margin-bottom: 40px;
+            transition: background-color 0.3s ease;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #bb86fc;
+            font-weight: 600;
+        }
+
+        input[type="text"] {
+            padding: 12px 16px;
+            font-size: 1rem;
+            width: 100%;
+            margin: 15px 0;
+            border: 1px solid #444;
+            border-radius: 8px;
+            background-color: #333;
+            color: #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            border-color: #bb86fc;
+            outline: none;
+            box-shadow: 0 0 8px rgba(187, 134, 252, 0.3);
+        }
+
+        button {
+            padding: 12px 30px;
+            background-color: #6200ea;
+            color: white;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #3700b3;
+        }
+
+        .result {
+            margin-top: 25px;
+        }
+
+        img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        img:hover {
+            transform: scale(1.05);
+        }
+
+        .error {
+            color: #cf6679;
+            font-size: 0.9rem;
+            margin-top: 15px;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        .dark-mode-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .dark-mode-toggle:hover {
+            background-color: #6200ea;
+        }
+
+        footer {
+            text-align: center;
+            color: #e0e0e0;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: #bb86fc;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <button class="dark-mode-toggle" id="darkModeToggle">🌙</button>
+    <div class="container">
+        <h1>YouTube MP3 Downloader</h1>
+        <input type="text" id="queryInput" placeholder="Enter Song name">
+        <button id="fetchBtn">SEND</button>
+
+        <input type="text" id="facebookUrlInput" placeholder="Enter Facebook video URL">
+        <button id="fetchFacebookBtn">SEND</button>
+
+        <input type="text" id="instaUrlInput" placeholder="Enter Instagram Video URL">
+        <button id="fetchInstaBtn">SEND</button>
+
+        <div id="result" class="result"></div>
+        <div id="instaResult" class="result"></div>
+        <div id="error" class="error"></div>
+    </div>
+
+    <footer>
+        <p>Enjoy the tool? Consider supporting me! 
+            <a href="https://pay.yoco.com/ShopZa?amount=20&reference=Multi%20Downloader" target="_blank">Donate here</a>
+        </p>
+    </footer>
+
+    <script>
+        // Function to fetch YouTube MP3 data
+        function fetchVideoData() {
+            const query = document.getElementById('queryInput').value;
+            if (!query) {
+                alert('Please enter a valid query!');
+                return;
+            }
+
+            // Make API call to the Flask backend
+            fetch(`/get_mp3?query=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    const errorElement = document.getElementById('error');
+                    errorElement.innerHTML = '';
+
+                    if (data.error) {
+                        errorElement.innerHTML = data.error;
+                        document.getElementById('result').innerHTML = '';
+                    } else {
+                        const { title, description, image, audio_url, views } = data;
+                        document.getElementById('result').innerHTML = `
+                            <h2>${title}</h2>
+                            <p><strong>Description:</strong> ${description}</p>
+                            <p><strong>Views:</strong> ${views}</p>
+                            <img src="${image}" alt="${title}">
+                            <br><br>
+                            <a href="${audio_url}" download="${title}.mp3">
+                                <button>Download MP3</button>
+                            </a>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('error').innerHTML = 'Error fetching data from the server.';
+                });
+        }
+
+        // Event listener for button click
+        document.getElementById('fetchBtn').addEventListener('click', fetchVideoData);
+
+        // Function to fetch Facebook video data
+        function fetchFacebookData() {
+            const url = document.getElementById('facebookUrlInput').value;
+            if (!url) {
+                alert('Please enter a valid URL!');
+                return;
+            }
+
+            // Make API call to Flask backend
+            fetch(`/get_facebook_video?url=${encodeURIComponent(url)}`)
+                .then(response => response.json())
+                .then(data => {
+                    const errorElement = document.getElementById('error');
+                    errorElement.innerHTML = '';
+
+                    if (data.error) {
+                        errorElement.innerHTML = data.error;
+                        document.getElementById('result').innerHTML = '';
+                    } else {
+                        const { title, thumbnail, hdDownloadUrl } = data;
+                        document.getElementById('result').innerHTML = `
+                            <h2>${title}</h2>
+                            <img src="${thumbnail}" alt="${title}">
+                            <br><br>
+                            <a href="${hdDownloadUrl}" download="${title}.mp4">
+                                <button>Download Video</button>
+                            </a>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('error').innerHTML = 'Error fetching data from the server.';
+                });
+        }
+
+        // Event listener for Facebook video button click
+        document.getElementById('fetchFacebookBtn').addEventListener('click', fetchFacebookData);
+
+        // Function to fetch Instagram video data
+        function fetchInstagramData() {
+            const url = document.getElementById('instaUrlInput').value;
+            if (!url) {
+                alert('Please enter a valid Instagram URL!');
+                return;
+            }
+
+            // Make API call to Flask backend
+            fetch(`/get_instagram_video?url=${encodeURIComponent(url)}`)
+                .then(response => response.json())
+                .then(data => {
+                    const errorElement = document.getElementById('error');
+                    errorElement.innerHTML = '';
+
+                    if (data.error) {
+                        errorElement.innerHTML = data.error;
+                        document.getElementById('instaResult').innerHTML = '';
+                    } else {
+                        const { creator, downloadUrl, type } = data;
+                        document.getElementById('instaResult').innerHTML = `
+                            <h2>Creator: ${creator}</h2>
+                            <p><strong>Type:</strong> ${type}</p>
+                            <a href="${downloadUrl}" download="instagram_video.${type}">
+                                <button>Download Video</button>
+                            </a>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('error').innerHTML = 'Error fetching data from the server.';
+                });
+        }
+
+        // Event listener for Instagram button click
+        document.getElementById('fetchInstaBtn').addEventListener('click', fetchInstagramData);
+
+        // Toggle dark mode
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        darkModeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            document.querySelector('.container').classList.toggle('dark-mode');
+            if (document.body.classList.contains('dark-mode')) {
+                darkModeToggle.textContent = '🌕';
+                document.body.style.backgroundColor = '#121212';
+                document.body.style.color = '#e0e0e0';
+                document.querySelector('.container').style.backgroundColor = '#1f1f1f';
+            } else {
+                darkModeToggle.textContent = '🌙';
+                document.body.style.backgroundColor = '#f0f4f8';
+                document.body.style.color = '#333';
+                document.querySelector('.container').style.backgroundColor = '#ffffff';
+            }
+        });
+    </script>
+</body>
+
+</html>
