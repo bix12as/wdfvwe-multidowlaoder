@@ -6,7 +6,6 @@ app = Flask(__name__)
 @app.route('/')
 def index():
     return render_template('index.html')
-
 @app.route('/get_mp3', methods=['GET'])
 def get_video():
     query = request.args.get('query', '')
@@ -23,6 +22,7 @@ def get_video():
                     'description': result.get('description'),
                     'image': result.get('image'),
                     'audio_url': result.get('download', {}).get('audio'),
+                    'video_url': result.get('download', {}).get('video'),  # <-- Added this line
                     'views': result.get('views')
                 }
                 return jsonify(video_details)
@@ -31,6 +31,7 @@ def get_video():
         else:
             return jsonify({'error': 'Failed to fetch data from API.'})
     return jsonify({'error': 'Query parameter is required.'})
+
 
 
 @app.route('/get_facebook_video', methods=['GET'])
