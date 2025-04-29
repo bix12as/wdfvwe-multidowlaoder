@@ -80,5 +80,70 @@ def get_instagram_video():
     return jsonify({'error': 'URL parameter is required.'})
 
 
+@app.route('/get_tiktok_video', methods=['GET'])
+def get_tiktok_video():
+    url = request.args.get('url', '')
+    if url:
+        try:
+            # NEW API
+            api_url = f"https://api.siputzx.my.id/api/tiktok/v2?url={url}"
+            response = requests.get(api_url)
+
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success'):
+                    download_urls = data['data']['download']['video']
+                    if download_urls:
+                        video_details = {
+                            'downloadUrl': download_urls[0],   # use the first video URL
+                            'type': 'mp4',                     # video type
+                            'postId': data.get('postId', ''),
+                            'likeCount': data['data']['metadata']['stats'].get('likeCount', 0),
+                            'playCount': data['data']['metadata']['stats'].get('playCount', 0),
+                            'commentCount': data['data']['metadata']['stats'].get('commentCount', 0),
+                            'shareCount': data['data']['metadata']['stats'].get('shareCount', 0),
+                            'locationCreated': data['data']['metadata'].get('locationCreated', 'Unknown')
+                        }
+                        return jsonify(video_details), 200
+                    else:
+                        return jsonify({'error': 'No video URLs found.'}), 404
+                else:
+                    return jsonify({'error': 'Video not found or failed to fetch data.'}), 404
+            else:
+                return jsonify({'error': 'Failed to fetch data from API.'}), 502
+        except Exception as e:
+            return jsonify({'error': f'Exception occurred: {str(e)}'}), 500
+    return jsonify({'error': 'URL parameter is required.'}), 400
+
+
+@app.route('/get_spotify_song', methods=['GET'])
+def get_spotify_song():
+    url = request.args.get('url', '')
+    if url:
+        try:
+            api_url = f"https://coderx-api.onrender.com/v1/downloaders/coderx/download/spotifydl?url={url}"
+            response = requests.get(api_url)
+
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('status') == 200 and data.get('success'):
+                    song_details = {
+                        'creator': data['creator'],
+                        'channel': data['channel'],
+                        'title': data['title'],
+                        'duration': data['duration'],
+                        'thumbnail': data['thumbnail'],
+                        'downloadLink': data['downloadLink'],
+                    }
+                    return jsonify(song_details), 200
+                else:
+                    return jsonify({'error': 'Song not found or failed to fetch data.'}), 404
+            else:
+                return jsonify({'error': 'Failed to fetch data from API.'}), 502
+        except Exception as e:
+            return jsonify({'error': f'Exception occurred: {str(e)}'}), 500
+    return jsonify({'error': 'URL parameter is required.'}), 400
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000, debug=True)
